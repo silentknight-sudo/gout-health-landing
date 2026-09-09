@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Truck, Clock, Sparkles, PhoneCall, Check, ShoppingCart, Award } from 'lucide-react';
+import { ShieldCheck, Truck, Clock, Sparkles, Check, ShoppingCart, Award } from 'lucide-react';
 import { HERO_DATA } from '../data/landingData';
 
 interface Props {
@@ -86,25 +86,16 @@ export const HeroSection: React.FC<Props> = ({ onOrderClick }) => {
               </div>
             </div>
 
-            {/* Action Buttons: Primary + Secondary */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2 max-w-xl mx-auto lg:mx-0">
+            {/* Action Buttons: Primary Order CTA */}
+            <div className="pt-2 max-w-xl mx-auto lg:mx-0">
               <button
                 id="hero-primary-order-btn"
                 onClick={onOrderClick}
-                className="flex-1 flex items-center justify-center gap-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base sm:text-lg py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-extrabold text-base sm:text-lg py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl hover:shadow-red-500/20 transition-all duration-200 cursor-pointer"
               >
                 <ShoppingCart className="w-5 h-5" />
-                <span>कैश ऑन डिलीवरी ऑर्डर करें</span>
+                <span>कैश ऑन डिलीवरी (COD) ऑर्डर करें</span>
               </button>
-
-              <a
-                id="hero-call-specialist-btn"
-                href={`tel:${HERO_DATA.tollFreeNumber}`}
-                className="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-semibold text-sm sm:text-base py-3.5 px-5 rounded-xl transition-all duration-200"
-              >
-                <PhoneCall className="w-4 h-4 text-blue-700" />
-                <span>कॉल पर विशेषज्ञ से बात करें</span>
-              </a>
             </div>
 
             <p className="text-xs text-gray-500 flex items-center justify-center lg:justify-start gap-1.5 pt-1">

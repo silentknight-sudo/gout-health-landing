@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Mail, Clock, ShieldCheck, Heart } from 'lucide-react';
+import { Mail, Clock, ShieldCheck, Heart } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -62,10 +62,6 @@ export const Footer: React.FC = () => {
               संपर्क एवं सहायता
             </h4>
             <div className="space-y-2.5 text-xs sm:text-sm text-gray-400">
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>हेल्पलाइन: +91 1800-266-4888</span>
-              </div>
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>ईमेल: support@gouthealth.in</span>
