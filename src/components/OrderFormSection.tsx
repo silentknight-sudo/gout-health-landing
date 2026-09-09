@@ -129,24 +129,11 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
                   </p>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold">
-                    {submitResult.syncedToSheets ? (
-                      <a
-                        href="https://docs.google.com/spreadsheets/d/1QuUEAhHn8qd5jm-1bbb5Mf4KdqcwRIT43trV_-cBFHY/edit"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1.5 bg-emerald-100/80 hover:bg-emerald-200 text-emerald-900 px-3 py-1.5 rounded-lg border border-emerald-300 transition-colors"
-                      >
-                        <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
-                        <span>✓ Google Sheet (Row दर्ज हुआ)</span>
-                        <ExternalLink className="w-3 h-3 text-emerald-700" />
-                      </a>
-                    ) : (
-                      <span className="flex items-center gap-1 bg-white/80 px-2.5 py-1 rounded-lg border border-emerald-200">
-                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>सुरक्षित बैकअप डेटाबेस में दर्ज</span>
-                      </span>
-                    )}
-                    <span className="bg-white/80 px-2.5 py-1.5 rounded-lg border border-emerald-200 text-emerald-800">
+                    <span className="flex items-center gap-1.5 bg-white/90 text-emerald-900 px-3 py-1.5 rounded-lg border border-emerald-200">
+                      <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                      <span>ऑर्डर डेटा सुरक्षित रूप से दर्ज</span>
+                    </span>
+                    <span className="bg-white/90 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-800">
                       डिलीवरी: 3-5 कार्य दिवस (COD)
                     </span>
                   </div>
