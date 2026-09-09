@@ -54,7 +54,13 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
         }),
       });
 
-      const data: OrderResponse = await response.json();
+      let data: OrderResponse;
+      try {
+        data = await response.json();
+      } catch {
+        const text = await response.text();
+        throw new Error(text || 'सर्वर से संपर्क नहीं हो पाया');
+      }
 
       if (response.ok && data.success) {
         setSubmitResult(data);
@@ -67,11 +73,11 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
           phone: '',
         });
       } else {
-        setErrors({ form: data.message || 'ऑर्डर दर्ज करने में त्रुटि हुई। कृपया पुनः प्रयास करें।' });
+        setErrors({ form: data?.message || 'ऑर्डर दर्ज करने में त्रुटि हुई। कृपया पुनः प्रयास करें।' });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Submit error:', err);
-      setErrors({ form: 'सर्वर से कनेक्ट करने में असमर्थ। कृपया पुनः प्रयास करें।' });
+      setErrors({ form: err?.message?.includes('सर्वर') ? err.message : 'सर्वर से कनेक्ट करने में असमर्थ। कृपया पुनः प्रयास करें।' });
     } finally {
       setIsSubmitting(false);
     }
