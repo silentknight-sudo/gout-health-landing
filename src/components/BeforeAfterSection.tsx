@@ -35,7 +35,7 @@ export const BeforeAfterSection: React.FC = () => {
                     Gouthealth शुरू करने से पहले
                   </h3>
                   <span className="text-xs text-red-700 font-semibold">
-                    गाउट की लाचारी और असहनीय दर्द
+                    जोड़ों का असहनीय दर्द और लाचारी
                   </span>
                 </div>
               </div>

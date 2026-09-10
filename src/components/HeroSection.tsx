@@ -28,7 +28,7 @@ export const HeroSection: React.FC<Props> = ({ onOrderClick }) => {
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-extrabold text-gray-950 tracking-tight leading-[1.2]">
-              गाउट दर्द से <span className="text-emerald-700 underline decoration-emerald-400 underline-offset-8">स्थायी छुटकारा</span> पाएं!
+              जोड़ों के दर्द से <span className="text-emerald-700 underline decoration-emerald-400 underline-offset-8">स्थायी छुटकारा</span> पाएं!
             </h1>
 
             {/* Subtitle description */}

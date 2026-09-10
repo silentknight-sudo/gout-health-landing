@@ -1,6 +1,6 @@
 {
   "name": "Gouthealth",
-  "description": "गाउट दर्द से स्थायी छुटकारा - 100% शुद्ध आयुर्वेदिक अर्क उपचार किट व कैश ऑन डिलीवरी ऑर्डर पेज।",
+  "description": "जोड़ों के दर्द से स्थायी छुटकारा - 100% शुद्ध आयुर्वेदिक अर्क उपचार किट व कैश ऑन डिलीवरी ऑर्डर पेज।",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
