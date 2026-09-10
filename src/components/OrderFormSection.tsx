@@ -302,7 +302,7 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <CheckCircle className="w-3.5 h-3.5 text-gray-400" /> 30-दिन मनी बैक गारंटी
+                <CheckCircle className="w-3.5 h-3.5 text-gray-400" /> 100% शुद्ध आयुर्वेदिक फॉर्मूला
               </span>
             </div>
 

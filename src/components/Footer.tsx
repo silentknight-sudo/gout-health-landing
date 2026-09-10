@@ -38,7 +38,7 @@ export const Footer: React.FC = () => {
           {/* Column 2: Delivery & Policies */}
           <div className="space-y-3">
             <h4 className="text-white font-bold text-sm tracking-wide uppercase border-b border-gray-800 pb-2">
-              डिलीवरी एवं गारंटी
+              डिलीवरी एवं नीतियां
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
               <li className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export const Footer: React.FC = () => {
                 <span className="text-emerald-400">✓</span> पैन-इंडिया 3-5 दिनों में सुरक्षित एक्सप्रेस शिपिंग
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-emerald-400">✓</span> 30-दिन मनी बैक गारंटी पॉलिसी
+                <span className="text-emerald-400">✓</span> 100% ओरिजिनल व सीलबंद उत्पाद
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-emerald-400">✓</span> 100% हर्बल एवं साइड-इफेक्ट मुक्त सुरक्षा

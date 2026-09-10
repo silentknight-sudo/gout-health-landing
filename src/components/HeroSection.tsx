@@ -69,7 +69,7 @@ export const HeroSection: React.FC<Props> = ({ onOrderClick }) => {
                   <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5 stroke-[3]" />
                   </div>
-                  <span>30 दिन मनी-बैक गारंटी</span>
+                  <span>कैश ऑन डिलीवरी उपलब्ध</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
