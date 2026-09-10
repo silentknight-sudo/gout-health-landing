@@ -64,6 +64,22 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
 
       if (response.ok && data.success) {
         setSubmitResult(data);
+
+        // Track Meta Pixel Conversion Events
+        try {
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'Lead');
+            (window as any).fbq('track', 'Purchase', {
+              value: 1999,
+              currency: 'INR',
+              content_name: 'Gouthealth 60-Day Healing Pack',
+              order_id: data.orderId || undefined,
+            });
+          }
+        } catch (pixelErr) {
+          console.warn('Meta Pixel tracking error:', pixelErr);
+        }
+
         if (data.orderId) {
           onOrderSuccess(data.orderId, data);
         }
