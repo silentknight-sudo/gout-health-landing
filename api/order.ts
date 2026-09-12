@@ -14,7 +14,18 @@ function parseSpreadsheetId(input?: string): string {
 }
 
 const SHEET_ID = parseSpreadsheetId(process.env.GOOGLE_SHEETS_ID);
-const RANGE = 'Sheet1!A:H';
+const RANGE = 'Sheet1!A:K';
+
+function normalizeIndianPhone(input?: string): string {
+  if (!input) return '';
+  let clean = input.toString().trim().replace(/[\s\-\(\)\+\.]/g, '');
+  if (clean.startsWith('0') && clean.length === 11) {
+    clean = clean.slice(1);
+  } else if (clean.startsWith('91') && clean.length === 12) {
+    clean = clean.slice(2);
+  }
+  return clean;
+}
 
 function getGoogleSheetsClient() {
   const keyBase64 = process.env.GOOGLE_SHEETS_KEY;
@@ -63,17 +74,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { name, phone, email, address, notes, combo } = req.body || {};
+    const { name, phone, email, address, notes, combo, utmSource, utmMedium, utmCampaign } = req.body || {};
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return res.status(400).json({ success: false, message: 'नाम दर्ज करना आवश्यक है (Name is required)' });
     }
 
-    const cleanPhone = (phone || '').toString().trim().replace(/[\s-]/g, '');
+    const cleanPhone = normalizeIndianPhone(phone);
     if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
       return res.status(400).json({
         success: false,
-        message: 'कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (Valid 10-digit Indian phone is required)',
+        message: 'कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (Valid 10-digit Indian phone starting with 6-9 is required)',
       });
     }
 
@@ -93,7 +104,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       dateOrdered,
       notes: orderNotes,
       combo: combo || 'Gouthealth 60-Day Complete Healing Pack (₹1,999)',
+      utmSource: utmSource || '',
+      utmMedium: utmMedium || '',
+      utmCampaign: utmCampaign || '',
     };
+
+    // Resilient server log for Vercel functions
+    console.log('ORDER_RECEIVED_LOG:', JSON.stringify(orderDetails));
 
     let syncedToSheets = false;
     let sheetError: string | null = null;
@@ -110,6 +127,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           orderId,
           dateOrdered,
           orderNotes,
+          utmSource || 'direct',
+          utmMedium || '',
+          utmCampaign || '',
         ];
 
         await sheetsClient.spreadsheets.values.append({

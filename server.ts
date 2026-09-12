@@ -80,7 +80,18 @@ function parseSpreadsheetId(input?: string): string {
 }
 
 const SHEET_ID = parseSpreadsheetId(process.env.GOOGLE_SHEETS_ID);
-const RANGE = 'Sheet1!A:H';
+const RANGE = 'Sheet1!A:K';
+
+function normalizeIndianPhone(input?: string): string {
+  if (!input) return '';
+  let clean = input.toString().trim().replace(/[\s\-\(\)\+\.]/g, '');
+  if (clean.startsWith('0') && clean.length === 11) {
+    clean = clean.slice(1);
+  } else if (clean.startsWith('91') && clean.length === 12) {
+    clean = clean.slice(2);
+  }
+  return clean;
+}
 
 // Google Sheets client helper
 function getGoogleSheetsClient() {
@@ -128,14 +139,14 @@ app.get('/api/config/status', (req, res) => {
 // Create Order (POST /api/order)
 app.post('/api/order', async (req, res) => {
   try {
-    const { name, phone, email, address, notes, combo } = req.body;
+    const { name, phone, email, address, notes, combo, utmSource, utmMedium, utmCampaign } = req.body;
 
     // Validation: Only Name and Phone are required
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return res.status(400).json({ success: false, message: 'नाम दर्ज करना आवश्यक है (Name is required)' });
     }
 
-    const cleanPhone = (phone || '').toString().trim().replace(/[\s-]/g, '');
+    const cleanPhone = normalizeIndianPhone(phone);
     if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
       return res.status(400).json({
         success: false,
@@ -181,6 +192,9 @@ app.post('/api/order', async (req, res) => {
           orderId, // F: Order ID
           dateOrdered, // G: Date Ordered
           orderNotes, // H: Notes
+          utmSource || 'direct', // I: Utm_source
+          utmMedium || '', // J: Utm_medium
+          utmCampaign || '', // K: Utm_campaign
         ];
 
         await sheetsClient.spreadsheets.values.append({

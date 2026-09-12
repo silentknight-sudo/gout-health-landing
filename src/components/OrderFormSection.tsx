@@ -7,6 +7,16 @@ interface Props {
   onOrderSuccess: (orderId: string, response: OrderResponse) => void;
 }
 
+function normalizeIndianPhone(input: string): string {
+  let cleaned = (input || '').toString().trim().replace(/[\s\-\(\)\+\.]/g, '');
+  if (cleaned.startsWith('0') && cleaned.length === 11) {
+    cleaned = cleaned.slice(1);
+  } else if (cleaned.startsWith('91') && cleaned.length === 12) {
+    cleaned = cleaned.slice(2);
+  }
+  return cleaned;
+}
+
 export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -24,7 +34,7 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
       newErrors.name = 'कृपया अपना पूरा नाम दर्ज करें (Full Name is required)';
     }
 
-    const cleanPhone = formData.phone.trim().replace(/[\s-]/g, '');
+    const cleanPhone = normalizeIndianPhone(formData.phone);
     if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
       newErrors.phone = 'कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (Valid 10-digit number starting with 6-9)';
     }
@@ -40,17 +50,37 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
     setIsSubmitting(true);
     setSubmitResult(null);
 
+    const cleanPhone = normalizeIndianPhone(formData.phone);
+
+    // Capture Meta / UTM parameters
+    let utmSource = '';
+    let utmMedium = '';
+    let utmCampaign = '';
+    try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        utmSource = urlParams.get('utm_source') || (urlParams.get('fbclid') ? 'meta_ads' : '');
+        utmMedium = urlParams.get('utm_medium') || '';
+        utmCampaign = urlParams.get('utm_campaign') || '';
+      }
+    } catch (e) {
+      // Ignore URL parse error
+    }
+
     try {
       const response = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name.trim(),
-          phone: formData.phone.trim(),
+          phone: cleanPhone,
           email: '',
           address: '',
           notes: 'त्वरित COD ऑर्डर (नाम व फोन - कॉल द्वारा पता पुष्टि)',
           combo: 'Gouthealth 60-Day Complete Healing Pack (₹1,999)',
+          utmSource,
+          utmMedium,
+          utmCampaign,
         }),
       });
 
@@ -65,10 +95,16 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
       if (response.ok && data.success) {
         setSubmitResult(data);
 
-        // Track Meta Pixel Conversion Events
+        // Track Meta Pixel Conversion Events ONLY after server confirms the order is saved
         try {
           if (typeof window !== 'undefined' && (window as any).fbq) {
-            (window as any).fbq('track', 'Lead');
+            (window as any).fbq('track', 'Lead', {
+              content_name: 'Gouthealth 60-Day Healing Pack',
+              status: 'order_confirmed',
+              order_id: data.orderId || undefined,
+              value: 1999,
+              currency: 'INR',
+            });
             (window as any).fbq('track', 'Purchase', {
               value: 1999,
               currency: 'INR',
