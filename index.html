@@ -32,21 +32,19 @@
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
       
-      // CRITICAL: Disable Meta's Automatic Button Click / Form Scrape Detection
-      // so Meta NEVER counts a lead simply when someone clicks a button or interacts with an input
-      fbq('set', 'autoConfig', false, '2176887713123874');
+      // Prevent Meta from automatically firing false leads on simple button clicks
+      fbq('set', 'autoConfig', false, '1551684242885136');
       
-      fbq('init', '2176887713123874');
+      fbq('init', '1551684242885136');
       fbq('track', 'PageView');
     </script>
     <!-- End Meta Pixel Code -->
   </head>
   <body>
     <!-- Meta Pixel noscript fallback -->
-    <noscript>
-      <img height="1" width="1" style="display:none"
-           src="https://www.facebook.com/tr?id=2176887713123874&ev=PageView&noscript=1" />
-    </noscript>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1551684242885136&ev=PageView&noscript=1"
+    /></noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
