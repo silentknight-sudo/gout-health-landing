@@ -98,13 +98,9 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
         // Track Meta Pixel Conversion Events ONLY after server confirms the order is saved
         try {
           if (typeof window !== 'undefined' && (window as any).fbq) {
-            (window as any).fbq('track', 'Lead', {
-              content_name: 'Gouthealth 60-Day Healing Pack',
-              status: 'order_confirmed',
-              order_id: data.orderId || undefined,
-              value: 1999,
-              currency: 'INR',
-            });
+            // Standard fbq('track', 'Lead') as requested
+            (window as any).fbq('track', 'Lead');
+            
             (window as any).fbq('track', 'Purchase', {
               value: 1999,
               currency: 'INR',
