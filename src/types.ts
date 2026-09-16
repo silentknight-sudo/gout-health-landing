@@ -12,6 +12,7 @@ export interface OrderFormData {
 export interface OrderResponse {
   success: boolean;
   orderId?: string;
+  isDuplicate?: boolean;
   message: string;
   syncedToSheets?: boolean;
   sheetError?: string | null;

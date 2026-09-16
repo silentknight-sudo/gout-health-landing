@@ -36,15 +36,12 @@ export const HeroSection: React.FC<Props> = ({ onOrderClick }) => {
               {HERO_DATA.description}
             </p>
 
-            {/* Pricing Card */}
-            <div id="hero-pricing-box" className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm max-w-xl mx-auto lg:mx-0">
-              <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 border-b border-gray-100">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-3xl sm:text-4xl font-black text-red-600 tracking-tight">
-                    ₹{HERO_DATA.discountedPrice.toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-lg sm:text-xl font-medium text-gray-400 line-through">
-                    ₹{HERO_DATA.regularPrice.toLocaleString('en-IN')}
+            {/* Highlights Card */}
+            <div id="hero-package-box" className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm max-w-xl mx-auto lg:mx-0">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight">
+                    60-दिन कंप्लीट हीलिंग पैक
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

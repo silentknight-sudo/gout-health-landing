@@ -31,7 +31,7 @@ export const FloatingCta: React.FC<Props> = ({ onOrderClick }) => {
         className="flex items-center gap-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-black text-sm sm:text-base px-5 py-3.5 rounded-full shadow-2xl hover:shadow-red-500/30 transition-all duration-300 border-2 border-white cursor-pointer"
       >
         <ShoppingBag className="w-4 h-4 text-amber-300" />
-        <span>अभी ऑर्डर करें (₹{HERO_DATA.discountedPrice.toLocaleString('en-IN')})</span>
+        <span>अभी ऑर्डर करें - कैश ऑन डिलीवरी</span>
       </button>
     </div>
   );

@@ -26,7 +26,20 @@ export default function App() {
   const [bannerVisible, setBannerVisible] = useState(true);
   const [trackModalOpen, setTrackModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
-  const [activeOrderId, setActiveOrderId] = useState<string>('');
+  const [activeOrderId, setActiveOrderId] = useState<string>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = sessionStorage.getItem('gouthealth_confirmed_order');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return parsed?.data?.orderId || '';
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return '';
+  });
 
   const scrollToOrderForm = () => {
     const el = document.getElementById('order-form-section');

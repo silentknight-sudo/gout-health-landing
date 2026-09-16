@@ -25,7 +25,25 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitResult, setSubmitResult] = useState<OrderResponse | null>(null);
+  
+  // Restore recent confirmed order from session storage so page refresh won't show blank form or re-trigger leads
+  const [submitResult, setSubmitResult] = useState<OrderResponse | null>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = sessionStorage.getItem('gouthealth_confirmed_order');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // Keep active if within last 2 hours
+          if (parsed && parsed.timestamp && Date.now() - parsed.timestamp < 2 * 60 * 60 * 1000) {
+            return parsed.data;
+          }
+        }
+      }
+    } catch {
+      // Ignore parse error
+    }
+    return null;
+  });
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -77,7 +95,7 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
           email: '',
           address: '',
           notes: 'त्वरित COD ऑर्डर (नाम व फोन - कॉल द्वारा पता पुष्टि)',
-          combo: 'Gouthealth 60-Day Complete Healing Pack (₹1,999)',
+          combo: 'Gouthealth 60-Day Complete Healing Pack',
           utmSource,
           utmMedium,
           utmCampaign,
@@ -95,18 +113,54 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
       if (response.ok && data.success) {
         setSubmitResult(data);
 
-        // Track Meta Pixel Conversion Events ONLY after server confirms the order is saved
+        // Persist confirmed order so page refreshes/reloads will not show an empty form
+        try {
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('gouthealth_confirmed_order', JSON.stringify({
+              timestamp: Date.now(),
+              data,
+            }));
+          }
+        } catch {
+          // Ignore storage error
+        }
+
+        // Meta Pixel Lead Deduplication Guard:
+        // 1. Skip if server flagged as duplicate submission
+        // 2. Skip if this phone or order was already fired in this browser session
+        // 3. Use Meta's official eventID deduplication parameter
         try {
           if (typeof window !== 'undefined' && (window as any).fbq) {
-            // Standard fbq('track', 'Lead') as requested
-            (window as any).fbq('track', 'Lead');
+            const phoneLeadKey = `meta_lead_phone_${cleanPhone}`;
+            const orderLeadKey = data.orderId ? `meta_lead_order_${data.orderId}` : '';
             
-            (window as any).fbq('track', 'Purchase', {
-              value: 1999,
-              currency: 'INR',
-              content_name: 'Gouthealth 60-Day Healing Pack',
-              order_id: data.orderId || undefined,
-            });
+            const alreadyFiredForPhone = sessionStorage.getItem(phoneLeadKey) || localStorage.getItem(phoneLeadKey);
+            const alreadyFiredForOrder = orderLeadKey && (sessionStorage.getItem(orderLeadKey) || localStorage.getItem(orderLeadKey));
+
+            if (!data.isDuplicate && !alreadyFiredForPhone && !alreadyFiredForOrder) {
+              // Pass eventID so Meta automatically deduplicates any retries
+              const eventOptions = data.orderId ? { eventID: data.orderId } : undefined;
+
+              (window as any).fbq('track', 'Lead', {
+                content_name: 'Gouthealth 60-Day Healing Pack',
+                status: 'order_confirmed',
+              }, eventOptions);
+              
+              (window as any).fbq('track', 'Purchase', {
+                content_name: 'Gouthealth 60-Day Healing Pack',
+                order_id: data.orderId || undefined,
+              }, eventOptions);
+
+              // Mark as tracked in session and local storage
+              sessionStorage.setItem(phoneLeadKey, 'true');
+              localStorage.setItem(phoneLeadKey, String(Date.now()));
+              if (orderLeadKey) {
+                sessionStorage.setItem(orderLeadKey, 'true');
+                localStorage.setItem(orderLeadKey, String(Date.now()));
+              }
+            } else {
+              console.log('[Meta Pixel] Lead event skipped: Order already tracked or duplicate submission.');
+            }
           }
         } catch (pixelErr) {
           console.warn('Meta Pixel tracking error:', pixelErr);
@@ -155,190 +209,187 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
             </p>
           </div>
 
-          {/* Success Banner if ordered */}
-          {submitResult && (
-            <div className="mb-8 p-6 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-950 shadow-sm animate-fade-in">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle className="w-6 h-6 stroke-[2.5]" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-emerald-900">
-                    बधाई हो! आपका ऑर्डर सफलतापूर्वक दर्ज कर लिया गया है!
-                  </h3>
-                  <p className="text-sm text-emerald-800 mt-1">
-                    ऑर्डर आईडी (Order ID):{' '}
-                    <span className="font-mono font-black text-emerald-950 bg-emerald-200/60 px-2 py-0.5 rounded">
-                      {submitResult.orderId}
-                    </span>
-                  </p>
-                  <p className="text-xs text-emerald-700 mt-2">
-                    {submitResult.message}
-                  </p>
+          {/* If already submitted (or page was refreshed after submitting), show Confirmed Order State instead of blank form */}
+          {submitResult ? (
+            <div id="order-confirmed-view" className="text-center py-6 animate-fade-in">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 border-2 border-emerald-300 shadow-xs">
+                <CheckCircle className="w-9 h-9 stroke-[2.5]" />
+              </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold">
-                    <span className="flex items-center gap-1.5 bg-white/90 text-emerald-900 px-3 py-1.5 rounded-lg border border-emerald-200">
-                      <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                      <span>ऑर्डर डेटा सुरक्षित रूप से दर्ज</span>
+              <span className="inline-block bg-emerald-100 text-emerald-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-2 border border-emerald-300">
+                ऑर्डर सफलतापूर्वक दर्ज (Order Confirmed)
+              </span>
+
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
+                बधाई हो! आपका ऑर्डर प्राप्त हो चुका है
+              </h3>
+
+              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-5 max-w-md mx-auto my-5 text-left shadow-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-emerald-200 mb-3">
+                  <span className="text-xs font-bold text-emerald-900">ऑर्डर आईडी (Order ID):</span>
+                  <span className="font-mono font-black text-emerald-950 bg-white px-3 py-1 rounded-md border border-emerald-300 text-sm tracking-wide">
+                    {submitResult.orderId}
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-800 leading-relaxed font-medium">
+                  {submitResult.message}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto text-xs font-semibold text-gray-700 mb-6 text-left">
+                <div className="flex items-center gap-2.5 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+                  <Truck className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span>फ्री होम डिलीवरी (3-5 कार्य दिवस)</span>
+                </div>
+                <div className="flex items-center gap-2.5 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+                  <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span>100% कैश ऑन डिलीवरी (COD)</span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 max-w-md mx-auto mb-6 text-left">
+                <span className="font-bold block mb-1">महत्वपूर्ण सूचना:</span>
+                हमारी टीम डिलीवरी पते की पुष्टि हेतु आपसे कुछ ही समय में कॉल पर संपर्क करेगी। पार्सल घर पहुँचने पर ही नकद भुगतान करें।
+              </div>
+
+              <button
+                type="button"
+                id="place-new-order-btn"
+                onClick={() => {
+                  setSubmitResult(null);
+                  try {
+                    sessionStorage.removeItem('gouthealth_confirmed_order');
+                  } catch {}
+                }}
+                className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
+              >
+                <span>नया ऑर्डर दर्ज करें (Place Another Order)</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* General Form Error */}
+              {errors.form && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errors.form}</span>
+                </div>
+              )}
+
+              {/* Form with ONLY Name and Phone Number */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                
+                {/* Name Input */}
+                <div>
+                  <label htmlFor="name" className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 mb-1.5">
+                    <User className="w-4 h-4 text-emerald-700" />
+                    <span>आपका पूरा नाम (Full Name) *</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      if (errors.name) setErrors({ ...errors, name: '' });
+                    }}
+                    placeholder="उदा. राजेश कुमार"
+                    className={`w-full px-4 py-3.5 text-base rounded-xl border ${
+                      errors.name ? 'border-red-500 bg-red-50/20' : 'border-gray-300 focus:border-emerald-600'
+                    } focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium`}
+                    required
+                  />
+                  {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+                </div>
+
+                {/* Phone Input */}
+                <div>
+                  <label htmlFor="phone" className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 mb-1.5">
+                    <Phone className="w-4 h-4 text-emerald-700" />
+                    <span>मोबाइल नंबर (Phone Number - डिलीवरी कॉल हेतु) *</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3.5 text-sm sm:text-base font-bold text-gray-600 select-none">
+                      +91
                     </span>
-                    <span className="bg-white/90 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-800">
-                      डिलीवरी: 3-5 कार्य दिवस (COD)
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={(e) => {
+                        setFormData({ ...formData, phone: e.target.value });
+                        if (errors.phone) setErrors({ ...errors, phone: '' });
+                      }}
+                      placeholder="10 अंकों का मोबाइल नंबर"
+                      maxLength={10}
+                      className={`w-full pl-14 pr-4 py-3.5 text-base rounded-xl border ${
+                        errors.phone ? 'border-red-500 bg-red-50/20' : 'border-gray-300 focus:border-emerald-600'
+                      } focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium tracking-wide`}
+                      required
+                    />
+                  </div>
+                  {errors.phone ? (
+                    <p className="text-xs text-red-600 mt-1">{errors.phone}</p>
+                  ) : (
+                    <p className="text-xs text-gray-500 mt-1">
+                      इस नंबर पर हमारी टीम डिलीवरी पते की पुष्टि (Address Confirmation) हेतु कॉल करेगी।
+                    </p>
+                  )}
+                </div>
+
+                {/* COD Notice Box */}
+                <div className="p-4 rounded-2xl bg-blue-50/90 border border-blue-200 text-xs sm:text-sm text-blue-950 flex items-start gap-3">
+                  <Truck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block text-sm">कैश ऑन डिलीवरी (COD) - 100% सुरक्षित:</span>
+                    <span className="text-blue-900 leading-relaxed block mt-0.5">
+                      कोई ऑनलाइन भुगतान करने की आवश्यकता नहीं है! ऑर्डर बुक करने के बाद हमारे प्रतिनिधि आपको कॉल करके डिलीवरी का पूरा पता नोट करेंगे। जब पार्सल आपके घर पहुंचेगा, तभी नकद पैसे दें।
                     </span>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* Order Summary Item Card */}
-          <div className="bg-gray-50/90 rounded-2xl p-4 sm:p-5 border border-gray-200 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4 text-center sm:text-left">
-              <img
-                src="/assets/product-hero.jpg"
-                alt="Gouthealth Pack"
-                referrerPolicy="no-referrer"
-                className="w-16 h-16 rounded-xl object-cover border border-emerald-300 shrink-0 shadow-xs"
-              />
-              <div>
-                <h3 className="font-bold text-gray-900 text-base sm:text-lg">
-                  Arogya Bio Gouthealth 60-दिन कंप्लीट हीलिंग पैक
-                </h3>
-                <p className="text-xs text-gray-500">
-                  1 बोतल दर्द निवारक तेल (100ml) + 1 जार डिटॉक्स कैप्सूल (30x2 कैप्सूल)
-                </p>
-              </div>
-            </div>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  id="submit-order-form-btn"
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-black text-base sm:text-xl py-4 sm:py-5 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer disabled:opacity-75"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <span>ऑर्डर प्रोसेस हो रहा है...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 text-amber-300" />
+                      <span>
+                        ⚡ अभी ऑर्डर कन्फर्म करें - फ्री होम डिलीवरी
+                      </span>
+                    </>
+                  )}
+                </button>
 
-            <div className="text-center sm:text-right shrink-0">
-              <div className="text-2xl sm:text-3xl font-black text-red-600">
-                ₹{HERO_DATA.discountedPrice.toLocaleString('en-IN')}
-              </div>
-              <div className="text-xs text-gray-400 line-through">
-                ₹{HERO_DATA.regularPrice.toLocaleString('en-IN')}
-              </div>
-            </div>
-          </div>
-
-          {/* General Form Error */}
-          {errors.form && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errors.form}</span>
-            </div>
-          )}
-
-          {/* Form with ONLY Name and Phone Number */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Name Input */}
-            <div>
-              <label htmlFor="name" className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 mb-1.5">
-                <User className="w-4 h-4 text-emerald-700" />
-                <span>आपका पूरा नाम (Full Name) *</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={(e) => {
-                  setFormData({ ...formData, name: e.target.value });
-                  if (errors.name) setErrors({ ...errors, name: '' });
-                }}
-                placeholder="उदा. राजेश कुमार"
-                className={`w-full px-4 py-3.5 text-base rounded-xl border ${
-                  errors.name ? 'border-red-500 bg-red-50/20' : 'border-gray-300 focus:border-emerald-600'
-                } focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium`}
-                required
-              />
-              {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
-            </div>
-
-            {/* Phone Input */}
-            <div>
-              <label htmlFor="phone" className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 mb-1.5">
-                <Phone className="w-4 h-4 text-emerald-700" />
-                <span>मोबाइल नंबर (Phone Number - डिलीवरी कॉल हेतु) *</span>
-              </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-sm sm:text-base font-bold text-gray-600 select-none">
-                  +91
-                </span>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={(e) => {
-                    setFormData({ ...formData, phone: e.target.value });
-                    if (errors.phone) setErrors({ ...errors, phone: '' });
-                  }}
-                  placeholder="10 अंकों का मोबाइल नंबर"
-                  maxLength={10}
-                  className={`w-full pl-14 pr-4 py-3.5 text-base rounded-xl border ${
-                    errors.phone ? 'border-red-500 bg-red-50/20' : 'border-gray-300 focus:border-emerald-600'
-                  } focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium tracking-wide`}
-                  required
-                />
-              </div>
-              {errors.phone ? (
-                <p className="text-xs text-red-600 mt-1">{errors.phone}</p>
-              ) : (
-                <p className="text-xs text-gray-500 mt-1">
-                  इस नंबर पर हमारी टीम डिलीवरी पते की पुष्टि (Address Confirmation) हेतु कॉल करेगी।
-                </p>
-              )}
-            </div>
-
-            {/* COD Notice Box */}
-            <div className="p-4 rounded-2xl bg-blue-50/90 border border-blue-200 text-xs sm:text-sm text-blue-950 flex items-start gap-3">
-              <Truck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold block text-sm">कैश ऑन डिलीवरी (COD) - 100% सुरक्षित:</span>
-                <span className="text-blue-900 leading-relaxed block mt-0.5">
-                  कोई ऑनलाइन भुगतान करने की आवश्यकता नहीं है! ऑर्डर बुक करने के बाद हमारे प्रतिनिधि आपको कॉल करके डिलीवरी का पूरा पता नोट करेंगे। जब पार्सल आपके घर पहुंचेगा, तभी नकद पैसे दें।
-                </span>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              id="submit-order-form-btn"
-              disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-black text-base sm:text-xl py-4 sm:py-5 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer disabled:opacity-75"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  <span>ऑर्डर प्रोसेस हो रहा है...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5 text-amber-300" />
-                  <span>
-                    ⚡ अभी ऑर्डर कन्फर्म करें (₹{HERO_DATA.discountedPrice.toLocaleString('en-IN')}) - फ्री होम डिलीवरी
+                {/* Trust Footer Badges */}
+                <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-gray-500 font-medium">
+                  <span className="flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5 text-gray-400" /> 256-Bit SSL सुरक्षित
                   </span>
-                </>
-              )}
-            </button>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-gray-400" /> 100% गोपनीय व सुरक्षित पार्सल
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5 text-gray-400" /> 100% शुद्ध आयुर्वेदिक फॉर्मूला
+                  </span>
+                </div>
 
-            {/* Trust Footer Badges */}
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-gray-500 font-medium">
-              <span className="flex items-center gap-1">
-                <Lock className="w-3.5 h-3.5 text-gray-400" /> 256-Bit SSL सुरक्षित
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-gray-400" /> 100% गोपनीय व सुरक्षित पार्सल
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <CheckCircle className="w-3.5 h-3.5 text-gray-400" /> 100% शुद्ध आयुर्वेदिक फॉर्मूला
-              </span>
-            </div>
-
-          </form>
+              </form>
+            </>
+          )}
 
         </div>
 

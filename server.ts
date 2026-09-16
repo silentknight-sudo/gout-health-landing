@@ -156,6 +156,26 @@ app.post('/api/order', async (req, res) => {
 
     const cleanEmail = (email || '').toString().trim() || '-';
 
+    // Deduplication Guard: Check if an order was placed with this phone number within the last 30 minutes
+    const recentDuplicate = localOrders.find((ord) => {
+      if (ord.phone !== cleanPhone) return false;
+      const orderTime = new Date(ord.timestamp).getTime();
+      const diffMinutes = (Date.now() - orderTime) / (1000 * 60);
+      return diffMinutes < 30;
+    });
+
+    if (recentDuplicate) {
+      console.log(`[Deduplication] Duplicate order detected for phone ${cleanPhone}. Returning existing Order ID: ${recentDuplicate.orderId}`);
+      return res.json({
+        success: true,
+        orderId: recentDuplicate.orderId,
+        isDuplicate: true,
+        syncedToSheets: true,
+        orderDetails: recentDuplicate,
+        message: `आपका ऑर्डर पहले ही सफलतापूर्वक दर्ज हो चुका है (Order ID: ${recentDuplicate.orderId})। हमारी टीम शीघ्र ही आपसे कॉल पर संपर्क करेगी।`,
+      });
+    }
+
     // Generate Order ID
     const orderId = `GOUT${Date.now()}`;
     const now = new Date().toISOString();
@@ -173,7 +193,7 @@ app.post('/api/order', async (req, res) => {
       dateOrdered,
       notes: orderNotes,
       address: address ? address.trim() : undefined,
-      combo: combo || 'Gouthealth 60-Day Complete Healing Pack (₹1,999)',
+      combo: combo || 'Gouthealth 60-Day Complete Healing Pack',
     };
     localOrders.unshift(newRecord);
 
