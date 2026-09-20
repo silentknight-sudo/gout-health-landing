@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Truck, Clock, Sparkles, Check, ShoppingCart, Award } from 'lucide-react';
+import { ShieldCheck, Truck, Clock, Sparkles, Check, ShoppingCart, Award, Star } from 'lucide-react';
 import { HERO_DATA } from '../data/landingData';
 
 interface Props {
@@ -15,10 +15,20 @@ export const HeroSection: React.FC<Props> = ({ onOrderClick }) => {
           {/* Left Column: Copy, Pricing & CTAs (7 cols on lg) */}
           <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center lg:text-left">
             
-            {/* AYUSH Ministry Certification Pill */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 text-emerald-900 border border-emerald-300 text-xs sm:text-sm font-semibold shadow-xs">
-              <ShieldCheck className="w-4 h-4 text-emerald-700" />
-              <span>{HERO_DATA.ayushBadge}</span>
+            {/* AYUSH Ministry Certification Pill + Social Proof */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 text-emerald-900 border border-emerald-300 text-xs sm:text-sm font-semibold shadow-xs">
+                <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                <span>{HERO_DATA.ayushBadge}</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-900 border border-amber-300 text-xs sm:text-sm font-bold shadow-xs">
+                <div className="flex items-center gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <span>4.9/5 • 10,000+ ग्राहक</span>
+              </div>
             </div>
 
             {/* Pain / Hook subheadline */}
@@ -88,11 +98,14 @@ export const HeroSection: React.FC<Props> = ({ onOrderClick }) => {
               <button
                 id="hero-primary-order-btn"
                 onClick={onOrderClick}
-                className="w-full flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-extrabold text-base sm:text-lg py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl hover:shadow-red-500/20 transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-extrabold text-base sm:text-lg py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl hover:shadow-red-500/30 transition-all duration-200 cursor-pointer animate-pulse-subtle"
               >
                 <ShoppingCart className="w-5 h-5" />
                 <span>कैश ऑन डिलीवरी (COD) ऑर्डर करें</span>
               </button>
+              <p className="text-[11px] sm:text-xs text-gray-500 font-medium text-center pt-2">
+                बिना एडवांस पेमेंट • सिर्फ नाम व नंबर भरें • पार्सल मिलने पर ही पैसे दें
+              </p>
             </div>
 
             <p className="text-xs text-gray-500 flex items-center justify-center lg:justify-start gap-1.5 pt-1">

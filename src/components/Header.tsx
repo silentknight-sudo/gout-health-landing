@@ -17,7 +17,7 @@ export const Header: React.FC<Props> = ({
   return (
     <header
       id="main-header"
-      style={{ top: bannerVisible ? '48px' : '0px' }}
+      style={{ top: bannerVisible ? '56px' : '0px' }}
       className="sticky left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-xs transition-all duration-300"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
