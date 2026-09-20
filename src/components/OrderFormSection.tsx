@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, Truck, CheckCircle, AlertCircle, Loader2, Sparkles, Lock, FileSpreadsheet, User, Phone, ExternalLink } from 'lucide-react';
 import { HERO_DATA } from '../data/landingData';
 import { OrderResponse } from '../types';
+import { CountdownTimer } from './CountdownTimer';
 
 interface Props {
   onOrderSuccess: (orderId: string, response: OrderResponse) => void;
@@ -207,6 +208,10 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
             <p className="text-gray-600 text-sm sm:text-base mt-2">
               बस अपना नाम और मोबाइल नंबर दर्ज करें — हमारी टीम डिलीवरी पते की पुष्टि हेतु आपसे तुरंत कॉल पर संपर्क करेगी!
             </p>
+            <div className="inline-flex items-center gap-2 mt-4 bg-gray-900 text-white rounded-xl px-4 py-2">
+              <span className="text-xs sm:text-sm font-bold text-amber-300">ऑफर समाप्त होने में:</span>
+              <CountdownTimer />
+            </div>
           </div>
 
           {/* If already submitted (or page was refreshed after submitting), show Confirmed Order State instead of blank form */}
@@ -275,6 +280,19 @@ export const OrderFormSection: React.FC<Props> = ({ onOrderSuccess }) => {
                   <span>{errors.form}</span>
                 </div>
               )}
+
+              {/* Reassurance strip right above the fields to reduce hesitation */}
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mb-6 text-xs sm:text-sm font-bold text-emerald-800">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" /> कोई ऑनलाइन पेमेंट नहीं
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" /> सिर्फ 10 सेकंड में फॉर्म भरें
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" /> कॉल पर पता बताएं, तभी पेमेंट
+                </span>
+              </div>
 
               {/* Form with ONLY Name and Phone Number */}
               <form onSubmit={handleSubmit} className="space-y-6">

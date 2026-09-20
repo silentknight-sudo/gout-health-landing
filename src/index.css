@@ -53,3 +53,10 @@ details summary::-webkit-details-marker {
   animation: pulse-subtle 2s infinite ease-in-out;
 }
 
+/* Reserve space so the mobile sticky order bar never overlaps page content */
+@media (max-width: 639px) {
+  body {
+    padding-bottom: 4.5rem;
+  }
+}
+

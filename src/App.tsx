@@ -18,6 +18,7 @@ import { FaqSection } from './components/FaqSection';
 import { OrderFormSection } from './components/OrderFormSection';
 import { Footer } from './components/Footer';
 import { FloatingCta } from './components/FloatingCta';
+import { MidPageCta } from './components/MidPageCta';
 import { OrderTrackModal } from './components/OrderTrackModal';
 import { AdminOrdersModal } from './components/AdminOrdersModal';
 import { OrderResponse } from './types';
@@ -87,6 +88,9 @@ export default function App() {
 
         {/* 8. Testimonials Section (Customer Experiences & Metrics) */}
         <TestimonialsSection />
+
+        {/* Mid-page conversion CTA for scrollers who won't reach the bottom form */}
+        <MidPageCta onOrderClick={scrollToOrderForm} />
 
         {/* 9. Before / After Comparison */}
         <BeforeAfterSection />
